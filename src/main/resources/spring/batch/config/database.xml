@@ -9,15 +9,12 @@
     <!-- connect to database -->
 	<bean id="dataSource"
 		class="org.springframework.jdbc.datasource.DriverManagerDataSource">
-		<property name="driverClassName" value="com.mysql.jdbc.Driver" />
+		<property name="driverClassName" value="com.mysql.jdbc.Driver" />  
 		<property name="url" value="jdbc:mysql://localhost:13306/spring_bank_app_db" />
 		<property name="username" value="audien" />
 		<property name="password" value="dheldjs" />
 	</bean>
 
-<!-- 	<bean id="transactionManager"
-		class="org.springframework.batch.support.transaction.ResourcelessTransactionManager" /> -->
-	
 	<!-- create job-meta tables automatically -->
 	<jdbc:initialize-database data-source="dataSource">
 		<jdbc:script location="org/springframework/batch/core/schema-drop-mysql.sql" />

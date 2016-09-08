@@ -13,19 +13,33 @@
 	<bean id="itemProcessor" class="com.astraltear.batch.CustomItemProcessor" />
 
 	<batch:job id="helloWorldJob">
-		<batch:step id="step1">
+		<batch:step id="step1" next="listDir">
 			<batch:tasklet>
 				<batch:chunk reader="cvsFileItemReader" writer="xmlItemWriter" processor="itemProcessor"
 					commit-interval="10">
 				</batch:chunk>
 			</batch:tasklet>
 		</batch:step>
+		<batch:step id="listDir">
+			<batch:tasklet ref="listDirTasklet" />
+		</batch:step>
 	</batch:job>
 
+	<batch:job id="reportJob">
+		<batch:step id="insertDBLog">
+			<batch:tasklet>
+				<batch:chunk reader="cvsFileItemReader" writer="mysqlItemWriter" commit-interval="2">
+				</batch:chunk>
+			</batch:tasklet>
+		</batch:step>
+	</batch:job>
+
+	<bean id="listDirTasklet" class="com.astraltear.batch.ListDirectoryTasklet">
+		<property name="directory" value="file:D:\00.temporary" />
+	</bean>
+
 	<bean id="cvsFileItemReader" class="org.springframework.batch.item.file.FlatFileItemReader">
-
 		<property name="resource" value="classpath:cvs/input/report.csv" />
-
 		<property name="lineMapper">
 			<bean class="org.springframework.batch.item.file.mapping.DefaultLineMapper">
 				<property name="lineTokenizer">
@@ -34,7 +48,7 @@
 					</bean>
 				</property>
 				<property name="fieldSetMapper">
-					<bean class="com.mkyong.ReportFieldSetMapper" />
+					<bean class="com.astraltear.batch.ReportFieldSetMapper" />
 
 					<!-- if no data type conversion, use BeanWrapperFieldSetMapper to map by name <bean class="org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper"> 
 						<property name="prototypeBeanName" value="report" /> </bean> -->
@@ -55,6 +69,21 @@
 			<list>
 				<value>com.astraltear.batch.model.Report</value>
 			</list>
+		</property>
+	</bean>
+
+	<bean id="mysqlItemWriter" class="org.springframework.batch.item.database.JdbcBatchItemWriter">
+		<property name="dataSource" ref="dataSource" />
+		<property name="sql">
+			<value>
+            <![CDATA[
+            	insert into raw_report(id,sales,qty,staffName)
+				values (:id, :sales, :qty, :staffName)
+            ]]>
+			</value>
+		</property>
+		<property name="itemSqlParameterSourceProvider">
+			<bean class="org.springframework.batch.item.database.BeanPropertyItemSqlParameterSourceProvider" />
 		</property>
 	</bean>
 
